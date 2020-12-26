@@ -44,5 +44,5 @@ setup(
     keywords='bioinformatics meta-analysis',
 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    install_requires=["git+https://github.com/blaze/odo.git"]
+    install_requires=[]#"git+https://github.com/blaze/odo.git"]
 )

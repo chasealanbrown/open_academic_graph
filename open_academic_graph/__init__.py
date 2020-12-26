@@ -212,12 +212,16 @@ class Database(object):
           LOG.info(f"Checking file and table {tbl_name} size...")
           if tbl_name == "paper_linking_pairs":
             nlines = 91137597
-#          elif tbl_name == "mag_papers_0":
-#            nlines = 21406986
+          elif tbl_name == "mag_papers_0":
+            nlines = 21406986
           else:
             LOG.debug("Reading file to get number of lines...")
             nlines = sum(1 for line in f)
-          row_count = self.last_id_count(tbl_name)
+          if "papers" not in tbl_name:
+            row_count = self.last_id_count(tbl_name)
+          else:
+            row_count = self.count(tbl_name)
+
           LOG.debug(f"number of lines in file: {nlines}\
                     \n- number of rows in table: {row_count}")
           if row_count == nlines:
@@ -297,6 +301,37 @@ class Database(object):
     except:
       sql_query = f"SELECT COUNT(1) FROM {table_name}"
       return self.query(sql_str=sql_query).iloc[0][0]
+
+
+  def sample(table: str,
+             n_rows: int):
+    sql_query = f"""
+    Declare @n int
+    Select @n=count(1) from {table}
+
+    create table RandomKeys (RandomKey int)
+    create table RandomKeysAttempt (RandomKey int)
+
+    -- generate m random keys between 1 and n
+    for i = 1 to {n_rows}
+      insert RandomKeysAttempt select rand()*n + 1
+
+      -- eliminate duplicates
+      insert RandomKeys select distinct RandomKey from RandomKeysAttempt
+
+      -- as long as we don't have enough, keep generating new keys,
+      -- with luck (and m much less than n), this won't be necessary
+      while count(RandomKeys) < {n_rows}
+        NextAttempt = rand()*n + 1
+          if not exists (select * from RandomKeys where RandomKey = NextAttempt)
+              insert RandomKeys select NextAttempt
+
+              -- get our random rows
+              select *
+              from RandomKeys r
+              join {table} t ON r.RandomKey = t.UniqueKey
+    """
+    return self.query(sql=sql_query)
 
 
   def __del__(self):

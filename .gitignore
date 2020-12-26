@@ -1,0 +1,14 @@
+*.pyc
+*.*~
+*.pkl
+*.egg-info
+.ipynb-checkpoints/
+.ropeproject/
+.mypy_cache/*
+__pycache__
+docs/build/
+build/
+dist/
+MANIFEST
+
+open_academic_graph/data/*
